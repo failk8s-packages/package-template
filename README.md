@@ -1,6 +1,6 @@
 # <#PACKAGE-NAME>-package
 
-This package provides <#PACKAGE> functionality using [<#PACKAGE-NAME>](<#PACKAGE-NAME-DOCS-URL>).
+This package provides <#PACKAGE-NAME> functionality using [<#PACKAGE-NAME>](<#PACKAGE-NAME-DOCS-URL>).
 
 ## Components
 
@@ -20,14 +20,57 @@ The following configuration values can be set to customize the <#PACKAGE-NAME> i
 
 This walkthrough guides you through using <#PACKAGE-NAME>...
 
+__NOTE__: `develop` version of the package needs to comply with semver, hence the package will be versioned as `0.0.0+develop`
+
+## Test in minikube
+
+Start minikube:
+```
+minikube start
+```
+
+Install kapp-controller 0.20+
+```
+kubectl apply -f https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml
+```
+
+Install the Package Metadata:
+```
+kubectl apply -f target/k8s
+```
+
+Install the Required RBAC for the package install (create the control NS):
+```
+kubectl apply -f target/test/packageinstall-ns-rbac.yaml
+```
+
+Create the configuration file for your cluster:
+```
+kubectl create secret generic <#PACKAGE-NAME> -n <#PACKAGE-NAME>-package --from-file=values.yaml=src/examples-values/minikube.yaml -o yaml --dry-run=client | kubectl apply -f -
+```
+
+Create the package:
+```
+kubectl apply -f target/test/packageinstall.yaml
+```
+
+Verify the installation:
+```
+watch kubectl get packageinstall -A
+```
+
+If there's an issue, you can verify the problem with:
+
+```
+kubectl get packageinstall <#PACKAGE-NAME> -n <#PACKAGE-NAME>-package -o yaml
+```
+
 ## Develop checklist
 
+
 1. Update your [config.json](./config.json) with the package info
-2. Update your [vendir.yml](./src/bundle/vendir.yml) with your upstreams
-3. `vendir sync` in `src/bundle` to fetch your new upstream files
-4. Add [overlays](./src/bundle/config/overlays/) and [values](./src/bundle/config/values.yaml)
-5. Update your [bundle.yml](./src/bundle/.imgpkg/bundle.yml) file
-6. Test your bundle: `ytt -f config`
-7. Lock images used: `kbld -f . --imgpkg-lock-output .imgpkg/images.yml`
-8. Publish your bundle: `imgpkg push --bundle quay.io/failk8s/<#PACKAGE-NAME>-package:<VERSION> --file .`. These steps can be done via [hack/build-package.sh](./hack/build-package.sh)
-9. Package up your k8s manifests and test in k8s [hack/package-manifests.sh](./hack/package-manifests.sh). The files will be in `target` folder.
+2. Add [overlays](./src/bundle/config/overlays/) and [values](./src/bundle/config/values.yaml)
+3. Test your bundle: `ytt --data-values-file src/examples-values/minikube.yaml  -f target/bundle/config` providing a sample values file from [example-values](./src/examples-values/)
+4. Build your bundle `./hack/build.sh`
+5. Publish your bundle: `./hack/push.sh`
+6. Add it to the [tkgdev-repo](https://github.com/failk8s-packages/tkgdev-repo) and publish the new repo and test the package from there, or [test with local files](./target/test)

@@ -5,5 +5,6 @@
         "domain": "tkgdev.failk8s.com",
         "displayName": "<#DISPLAY NAME>",
         "version": "<#VERSION>"
-    }
+    },
+    "packages":[]
 }
