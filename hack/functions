@@ -42,12 +42,7 @@ function push {
     # Create imgpkgBundle
     echo "Updating package: $_name:$_version"
     pushd $BASE_DIR/target/bundle &>/dev/null
-    if [[ "$_version" != "develop" ]]
-    then
-        kbld -f . --imgpkg-lock-output .imgpkg/images.yml
-    else
-        echo "Not locking images as we're in develop branch"
-    fi
+    kbld -f . --imgpkg-lock-output .imgpkg/images.yml
     imgpkg push --bundle $_registry/$_name-package:$_version --file .
     popd &>/dev/null
 
